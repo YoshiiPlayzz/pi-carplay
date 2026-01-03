@@ -11,6 +11,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import CameraswitchOutlinedIcon from '@mui/icons-material/CameraswitchOutlined'
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew'
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
 
 export const useTabsConfig: (receivingVideo: boolean) => TabConfig[] = (receivingVideo) => {
   const theme = useTheme()
@@ -51,6 +52,7 @@ export const useTabsConfig: (receivingVideo: boolean) => TabConfig[] = (receivin
       path: ROUTES.SETTINGS,
       icon: <SettingsOutlinedIcon sx={{ fontSize: 30 }} />
     },
+    { label: 'Car', path: ROUTES.CAR, icon: <DirectionsCarIcon sx={{ fontSize: 30 }} /> },
     { label: 'Quit', path: 'quit', icon: <PowerSettingsNewIcon sx={{ fontSize: 30 }} /> }
   ]
 }

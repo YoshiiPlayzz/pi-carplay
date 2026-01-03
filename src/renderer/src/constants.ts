@@ -4,6 +4,7 @@ export enum ROUTES {
   CAMERA = '/camera',
   INFO = '/info',
   SETTINGS = '/settings',
+  CAR = '/car',
   QUIT = 'quit'
 }
 

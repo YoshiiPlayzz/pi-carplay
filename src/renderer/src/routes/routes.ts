@@ -1,4 +1,4 @@
-import { Home, Media, Camera, Settings, Info } from '../components/tabs'
+import { Home, Media, Camera, Settings, Info, Car } from '../components/tabs'
 import { RoutePath, RouteProps } from './types'
 // import { settingsRoutes } from './settings'
 
@@ -23,5 +23,6 @@ export const routes: RouteProps[] = [
   {
     path: `/${RoutePath.Home}`,
     component: Home
-  }
+  },
+  { path: `/${RoutePath.Car}`, component: Car }
 ]

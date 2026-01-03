@@ -16,6 +16,7 @@ export enum RoutePath {
   NewSettings = 'new-settings',
   Camera = 'camera',
   Media = 'media',
+  Car = 'car',
   Info = 'info'
 }
 
