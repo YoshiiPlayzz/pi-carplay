@@ -204,6 +204,8 @@ function loadConfig(): ExtraConfig {
     ...DEFAULT_CONFIG,
     kiosk: true,
     camera: '',
+    canEnabled: false,
+    canInterface: '',
     nightMode: true,
     audioVolume: 1.0,
     navVolume: 1.0,
@@ -726,6 +728,29 @@ app.whenReady().then(() => {
     saveSettings(settings)
     return true
   })
+  ipcMain.handle('settings:list-can-interfaces', async () => {
+    try {
+      const names = await (async () => {
+        try {
+          const sys = await fsp.readdir('/sys/class/net')
+          if (Array.isArray(sys) && sys.length) return sys
+        } catch {}
+
+        const ifaces = os.networkInterfaces?.() ?? {}
+        return Object.keys(ifaces)
+      })()
+
+      const filtered = names.filter((name) => {
+        const lower = name.toLowerCase()
+        return lower.startsWith('can') || lower.startsWith('vcan') || lower.startsWith('slcan')
+      })
+
+      return Array.from(new Set(filtered))
+    } catch (err) {
+      console.warn('[settings] list-can-interfaces failed', err)
+      return []
+    }
+  })
   ipcMain.handle('settings:reset-dongle-icons', () => {
     const next: ExtraConfig = {
       ...config,
@@ -892,7 +917,9 @@ function saveSettings(next: ExtraConfig) {
         highlightEditableFieldLight: next.highlightEditableFieldLight,
         dongleIcon120: next.dongleIcon120,
         dongleIcon180: next.dongleIcon180,
-        dongleIcon256: next.dongleIcon256
+        dongleIcon256: next.dongleIcon256,
+        canEnabled: Boolean(next.canEnabled),
+        canInterface: next.canInterface ?? ''
       },
       null,
       2

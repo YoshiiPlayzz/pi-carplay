@@ -118,6 +118,7 @@ declare global {
       getVersion(): Promise<string>
       getLatestRelease(): Promise<{ version?: string; url?: string }>
       performUpdate(imageUrl?: string): Promise<void>
+      listCanInterfaces(): Promise<string[]>
       onUpdateEvent(cb: (payload: UpdateEvent) => void): () => void
       onUpdateProgress(cb: (payload: UpdateProgress) => void): () => void
       getKiosk(): Promise<boolean>

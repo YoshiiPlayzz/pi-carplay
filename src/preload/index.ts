@@ -111,6 +111,7 @@ const appApi = {
     ipcRenderer.invoke('app:getLatestRelease'),
   performUpdate: (imageUrl?: string): Promise<void> =>
     ipcRenderer.invoke('app:performUpdate', imageUrl),
+  listCanInterfaces: (): Promise<string[]> => ipcRenderer.invoke('settings:list-can-interfaces'),
 
   onUpdateEvent: (cb: (payload: UpdateEvent) => void): (() => void) => {
     const ch = 'update:event'

@@ -116,6 +116,11 @@ git clone --branch main --single-branch https://github.com/f-io/pi-carplay.git \
 1. Use the dongle with a regular head unit **or** the vendor’s mobile app to add your phone once.
 2. After the dongle knows your phone, connect the dongle to pi-carplay — it will attach without running provisioning again.
 
+## CAN-Bus extension
+
+> Planned to read out messages from car CANBus network, specified by configuration for the car.
+> Also interactions with carplay/audio are planned!
+
 ## Images
 
 <p align="center">

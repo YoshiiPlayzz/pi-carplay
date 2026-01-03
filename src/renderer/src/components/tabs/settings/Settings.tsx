@@ -39,7 +39,9 @@ import {
   VolumeOffOutlined,
   VolumeUpOutlined,
   PlayCircleOutline,
-  FullscreenOutlined
+  FullscreenOutlined,
+  DirectionsCarOutlined,
+  LanOutlined
 } from '@mui/icons-material'
 import { useTheme } from '@mui/material/styles'
 import type { SxProps, Theme } from '@mui/material/styles'
@@ -83,7 +85,7 @@ function normalizeOemLabel(input: string): string {
 
 type UsbEvent = { type?: string } & Record<string, unknown>
 type DebouncedSave = DebouncedFunc<(s: ExtraConfig) => void>
-type ToggleKey = 'autoPlay' | 'audioTransferMode' | 'nightMode' | 'kiosk'
+type ToggleKey = 'autoPlay' | 'audioTransferMode' | 'nightMode' | 'kiosk' | 'canEnabled'
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement },
@@ -140,7 +142,9 @@ export const Settings: React.FC = () => {
     return {
       ...base,
       audioVolume: base?.audioVolume ?? 1.0,
-      navVolume: base?.navVolume ?? 1.0
+      navVolume: base?.navVolume ?? 1.0,
+      canEnabled: base?.canEnabled ?? false,
+      canInterface: base?.canInterface ?? ''
     }
   })
   useEffect(() => {
@@ -148,7 +152,9 @@ export const Settings: React.FC = () => {
     setActiveSettings({
       ...settings,
       audioVolume: settings.audioVolume ?? 1.0,
-      navVolume: settings.navVolume ?? 1.0
+      navVolume: settings.navVolume ?? 1.0,
+      canEnabled: settings.canEnabled ?? false,
+      canInterface: settings.canInterface ?? ''
     })
   }, [settings])
 
@@ -165,6 +171,8 @@ export const Settings: React.FC = () => {
   const [isResettingIcons, setIsResettingIcons] = useState(false)
   const [isImportingIcon, setIsImportingIcon] = useState(false)
   const [iconRestartPending, setIconRestartPending] = useState(false)
+  const [canInterfaces, setCanInterfaces] = useState<string[]>([])
+  const [isLoadingCan, setIsLoadingCan] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const loadImageFromFile = (file: File): Promise<HTMLImageElement> => {
@@ -336,6 +344,8 @@ export const Settings: React.FC = () => {
       key === 'navVolume' ||
       key === 'bindings' ||
       key === 'camera' ||
+      key === 'canEnabled' ||
+      key === 'canInterface' ||
       UI_DEBOUNCED_KEYS.has(key)
     ) {
       debouncedSave(updated)
@@ -475,6 +485,7 @@ export const Settings: React.FC = () => {
       case 'nightMode':
       case 'audioTransferMode':
       case 'autoPlay':
+      case 'canEnabled':
         return Boolean(raw) as ExtraConfig[K]
 
       case 'wifiType': {
@@ -504,6 +515,7 @@ export const Settings: React.FC = () => {
       case 'camera':
       case 'carName':
       case 'oemName':
+      case 'canInterface':
         return (raw === undefined ? undefined : String(raw)) as ExtraConfig[K]
 
       case 'bindings':
@@ -715,6 +727,36 @@ export const Settings: React.FC = () => {
     [cameraOptions]
   )
   const cameraValue = coerceSelectValue(activeSettings.camera ?? '', cameraIds)
+
+  const loadCanInterfaces = useCallback(async () => {
+    setIsLoadingCan(true)
+    try {
+      const list = (await window.app.listCanInterfaces()) ?? []
+      const uniq = Array.from(new Set(list.filter(Boolean)))
+      setCanInterfaces(uniq)
+      if (!activeSettings.canInterface && uniq.length > 0) {
+        await autoSave({ canInterface: uniq[0] })
+      }
+    } catch (err) {
+      console.warn('[Settings] Failed to list CAN interfaces', err)
+      setCanInterfaces([])
+    } finally {
+      setIsLoadingCan(false)
+    }
+  }, [activeSettings.canInterface, autoSave])
+
+  useEffect(() => {
+    void loadCanInterfaces()
+  }, [loadCanInterfaces])
+
+  const canInterfaceOptions = useMemo<readonly string[]>(
+    () => (canInterfaces.length ? canInterfaces : ['']),
+    [canInterfaces]
+  )
+  const canInterfaceValue = coerceSelectValue(
+    activeSettings.canInterface ?? '',
+    canInterfaceOptions
+  )
 
   const wifiOptions = [WiFiValues['2.4ghz'], WiFiValues['5ghz']]
   const wifiValue = coerceSelectValue(
@@ -1035,6 +1077,14 @@ export const Settings: React.FC = () => {
                       IconOn: FullscreenOutlined,
                       IconOff: FullscreenOutlined,
                       onChange: setBool('kiosk')
+                    },
+                    {
+                      key: 'canEnabled' as const,
+                      title: 'CAN-Bus',
+                      visualChecked: Boolean(activeSettings.canEnabled),
+                      IconOn: LanOutlined,
+                      IconOff: LanOutlined,
+                      onChange: setBool('canEnabled')
                     }
                   ] as const
                 ).map((item, idx, arr) => {
@@ -1298,6 +1348,39 @@ export const Settings: React.FC = () => {
                   >
                     <MenuItem value={0}>44.1 kHz</MenuItem>
                     <MenuItem value={1}>48 kHz</MenuItem>
+                  </TextField>
+                </Grid>
+
+                <Grid
+                  size={{ xs: 12, sm: 4 }}
+                  sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}
+                >
+                  <TextField
+                    id="canInterface"
+                    size="small"
+                    select
+                    fullWidth
+                    disabled={!activeSettings.canEnabled || isLoadingCan}
+                    sx={{
+                      minWidth: 0,
+                      ...highlightEditableField({
+                        isActive: appContext?.keyboardNavigation?.focusedElId === 'canInterface',
+                        isDarkMode
+                      })
+                    }}
+                    label="CAN INTERFACE"
+                    value={canInterfaceValue}
+                    onKeyDown={openSelectOnEnter}
+                    onChange={(e) => settingsChange('canInterface', e.target.value)}
+                    slotProps={{
+                      inputLabel: { shrink: true }
+                    }}
+                  >
+                    {(canInterfaceOptions.length ? canInterfaceOptions : ['']).map((iface) => (
+                      <MenuItem key={iface || 'none'} value={iface}>
+                        {iface || 'No CAN-Interfaces'}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 </Grid>
 
