@@ -18,6 +18,11 @@ import PhoneIphoneOutlinedIcon from '@mui/icons-material/PhoneIphoneOutlined'
 import { useTranslation } from 'react-i18next'
 
 const RETRY_DELAY_MS = 3000
+const INFO_BAR_DURATION_MS = 5000
+const INFO_BAR_ANIM_MS = 500
+const INFO_GESTURE_START_X_RATIO = 0.7
+const INFO_GESTURE_START_Y_RATIO = 0.2
+const INFO_BAR_DOCK_LEFT_PX = 120
 
 interface CarplayProps {
   receivingVideo: boolean
@@ -188,6 +193,68 @@ function StatusOverlay({
 
 // Carplay
 
+function InfoBar({ show, mounted }: { show: boolean; mounted: boolean }) {
+  const theme = useTheme()
+  const items = [
+    { label: 'Temperatur', value: '22°C' },
+    { label: 'Spannung', value: '12.8V' },
+    { label: 'CPU', value: '45%' },
+    { label: 'Lüfter', value: '1200 RPM' }
+  ]
+
+  return (
+    <Box
+      sx={{
+        display: mounted ? 'flex' : 'none',
+        position: 'absolute',
+        top: 10,
+        right: 12,
+        left: INFO_BAR_DOCK_LEFT_PX,
+        alignItems: 'center',
+        gap: 1.5,
+        zIndex: 12,
+        pointerEvents: 'none',
+        padding: '6px 10px',
+        borderRadius: 999,
+        background: alpha(theme.palette.common.black, 0.45),
+        border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`,
+        boxShadow: `0 10px 22px ${alpha(theme.palette.common.black, 0.35)}`,
+        backdropFilter: 'blur(8px)',
+        maxWidth: `calc(100% - ${INFO_BAR_DOCK_LEFT_PX + 12}px)`,
+        flexWrap: 'nowrap',
+        opacity: show ? 1 : 0,
+        transform: show ? 'translateY(0)' : 'translateY(-14px)',
+        transition: `opacity ${INFO_BAR_ANIM_MS}ms ease, transform ${INFO_BAR_ANIM_MS}ms ease`
+      }}
+    >
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        {items.map((item) => (
+          <Box
+            key={item.label}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.65,
+              px: 1,
+              py: 0.45,
+              borderRadius: 999,
+              backgroundColor: alpha(theme.palette.common.white, 0.08),
+              border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`
+            }}
+          >
+            <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.7) }}>
+              {item.label}
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.common.white }}>
+              {item.value}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  )
+}
+
 const CarplayComponent: React.FC<CarplayProps> = ({
   receivingVideo,
   setReceivingVideo,
@@ -228,6 +295,10 @@ const CarplayComponent: React.FC<CarplayProps> = ({
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const hasStartedRef = useRef(false)
   const [renderReady, setRenderReady] = useState(false)
+  const [showInfoBar, setShowInfoBar] = useState(false)
+  const [infoBarMounted, setInfoBarMounted] = useState(false)
+  const infoTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const infoHideAnimRef = useRef<NodeJS.Timeout | null>(null)
   const lastNonCarplayPathRef = useRef<string | null>(null)
   const autoSwitchedRef = useRef(false)
   const pendingVideoFocusRef = useRef(false)
@@ -437,6 +508,103 @@ const CarplayComponent: React.FC<CarplayProps> = ({
 
   // Audio + touch hooks
   const touchHandlers = useCarplayMultiTouch()
+  const infoGesture = useRef<{
+    tracking: boolean
+    startX: number
+    startY: number
+  }>({ tracking: false, startX: 0, startY: 0 })
+
+  const hideInfoBar = useCallback(() => {
+    setShowInfoBar(false)
+    if (infoHideAnimRef.current) clearTimeout(infoHideAnimRef.current)
+    infoHideAnimRef.current = setTimeout(() => setInfoBarMounted(false), INFO_BAR_ANIM_MS)
+    if (infoTimeoutRef.current) {
+      clearTimeout(infoTimeoutRef.current)
+      infoTimeoutRef.current = null
+    }
+  }, [])
+
+  const revealInfoBar = useCallback(() => {
+    setInfoBarMounted(true)
+    setShowInfoBar(true)
+    if (infoTimeoutRef.current) clearTimeout(infoTimeoutRef.current)
+    infoTimeoutRef.current = setTimeout(hideInfoBar, INFO_BAR_DURATION_MS)
+  }, [hideInfoBar])
+
+  const handleInfoGestureStart = useCallback<React.PointerEventHandler<HTMLDivElement>>((e) => {
+    const el = e.currentTarget as HTMLElement
+    const rect = el.getBoundingClientRect()
+    const localX = e.clientX - rect.left
+    const localY = e.clientY - rect.top
+    const inHotZone =
+      localX >= rect.width * INFO_GESTURE_START_X_RATIO &&
+      localY <= rect.height * INFO_GESTURE_START_Y_RATIO
+    if (inHotZone) {
+      e.preventDefault()
+      infoGesture.current = { tracking: true, startX: e.clientX, startY: e.clientY }
+    } else {
+      infoGesture.current.tracking = false
+    }
+  }, [])
+
+  const handleInfoGestureMove = useCallback<React.PointerEventHandler<HTMLDivElement>>(
+    (e) => {
+      if (!infoGesture.current.tracking) return
+      const deltaY = e.clientY - infoGesture.current.startY
+      const deltaX = Math.abs(e.clientX - infoGesture.current.startX)
+      if (deltaY > 48 && deltaY > deltaX) {
+        infoGesture.current.tracking = false
+        revealInfoBar()
+      }
+    },
+    [revealInfoBar]
+  )
+
+  const handleInfoGestureEnd = useCallback(() => {
+    infoGesture.current.tracking = false
+  }, [])
+
+  const mergedTouchHandlers = useMemo(
+    () => ({
+      onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+        handleInfoGestureStart(e)
+        touchHandlers.onPointerDown(e)
+      },
+      onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+        handleInfoGestureMove(e)
+        touchHandlers.onPointerMove(e)
+      },
+      onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+        handleInfoGestureEnd()
+        touchHandlers.onPointerUp(e)
+      },
+      onPointerCancel: (e: React.PointerEvent<HTMLDivElement>) => {
+        handleInfoGestureEnd()
+        touchHandlers.onPointerCancel(e)
+      },
+      onPointerOut: (e: React.PointerEvent<HTMLDivElement>) => {
+        handleInfoGestureEnd()
+        touchHandlers.onPointerOut(e)
+      },
+      onLostPointerCapture: (e: React.PointerEvent<HTMLDivElement>) => {
+        handleInfoGestureEnd()
+        touchHandlers.onLostPointerCapture(e)
+      },
+      onContextMenu: touchHandlers.onContextMenu
+    }),
+    [
+      handleInfoGestureEnd,
+      handleInfoGestureMove,
+      handleInfoGestureStart,
+      touchHandlers.onContextMenu,
+      touchHandlers.onLostPointerCapture,
+      touchHandlers.onPointerCancel,
+      touchHandlers.onPointerDown,
+      touchHandlers.onPointerMove,
+      touchHandlers.onPointerOut,
+      touchHandlers.onPointerUp
+    ]
+  )
 
   const clearRetryTimeout = useCallback(() => {
     if (retryTimeoutRef.current) {
@@ -893,12 +1061,93 @@ const CarplayComponent: React.FC<CarplayProps> = ({
     }
   }, [isStreaming, setReceivingVideo])
 
+  useEffect(() => hideInfoBar, [hideInfoBar])
+  useEffect(
+    () => () => {
+      if (infoHideAnimRef.current) clearTimeout(infoHideAnimRef.current)
+    },
+    []
+  )
+
   /* ------------------------------- UI binding ------------------------------ */
 
   const mode: 'dongle' | 'phone' = !isDongleConnected ? 'dongle' : 'phone'
 
   const inCarplay = pathname === '/'
   const showCarplayOverlay = inCarplay || navVideoOverlayActive
+  const [statsMenuVisible, setStatsMenuVisible] = useState(false)
+  const statsMenuTimeoutRef = useRef<number | null>(null)
+  const statsGestureRef = useRef({
+    active: false,
+    triggered: false,
+    startX: 0,
+    startY: 0
+  })
+
+  const showStatsMenu = useCallback(() => {
+    setStatsMenuVisible(true)
+    if (statsMenuTimeoutRef.current) {
+      window.clearTimeout(statsMenuTimeoutRef.current)
+    }
+    statsMenuTimeoutRef.current = window.setTimeout(() => {
+      setStatsMenuVisible(false)
+      statsMenuTimeoutRef.current = null
+    }, 1000)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (statsMenuTimeoutRef.current) {
+        window.clearTimeout(statsMenuTimeoutRef.current)
+        statsMenuTimeoutRef.current = null
+      }
+    }
+  }, [])
+
+  const handleStatsPointerDown = useCallback((ev: React.PointerEvent) => {
+    if (ev.pointerType !== 'touch') return
+    ev.stopPropagation()
+    statsGestureRef.current = {
+      active: true,
+      triggered: false,
+      startX: ev.clientX,
+      startY: ev.clientY
+    }
+  }, [])
+
+  const handleStatsPointerMove = useCallback(
+    (ev: React.PointerEvent) => {
+      if (ev.pointerType !== 'touch') return
+      const state = statsGestureRef.current
+      if (!state.active || state.triggered) return
+      ev.stopPropagation()
+
+      const deltaY = ev.clientY - state.startY
+      const deltaX = ev.clientX - state.startX
+
+      if (deltaY > 50 && Math.abs(deltaX) < 60) {
+        state.triggered = true
+        showStatsMenu()
+      }
+    },
+    [showStatsMenu]
+  )
+
+  const handleStatsPointerEnd = useCallback((ev: React.PointerEvent) => {
+    if (ev.pointerType !== 'touch') return
+    ev.stopPropagation()
+    statsGestureRef.current.active = false
+  }, [])
+
+  const statsItems = useMemo(
+    () => [
+      { label: 'Spannung', value: '12.4 V' },
+      { label: 'Temperatur', value: '58 °C' },
+      { label: 'Laufzeit', value: '01:42 h' },
+      { label: 'Status', value: isStreaming ? 'Online' : 'Offline' }
+    ],
+    [isStreaming]
+  )
 
   return (
     <div
@@ -924,6 +1173,71 @@ const CarplayComponent: React.FC<CarplayProps> = ({
         zIndex: showCarplayOverlay ? 999 : -1
       }}
     >
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: 96,
+          height: 96,
+          zIndex: 20,
+          pointerEvents: inCarplay ? 'auto' : 'none',
+          touchAction: 'none'
+        }}
+        onPointerDown={handleStatsPointerDown}
+        onPointerMove={handleStatsPointerMove}
+        onPointerUp={handleStatsPointerEnd}
+        onPointerCancel={handleStatsPointerEnd}
+      />
+
+      <Box
+        aria-hidden={!statsMenuVisible}
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 18,
+          px: 2,
+          py: 1.25,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          transform: statsMenuVisible ? 'translateY(0)' : 'translateY(-110%)',
+          opacity: statsMenuVisible ? 1 : 0,
+          pointerEvents: statsMenuVisible ? 'auto' : 'none',
+          transition: 'transform 220ms ease, opacity 220ms ease',
+          backdropFilter: 'blur(10px)',
+          background: `linear-gradient(180deg, ${alpha(
+            theme.palette.background.default,
+            0.85
+          )} 0%, ${alpha(theme.palette.background.paper, 0.65)} 100%)`,
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.45)}`,
+          boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.25)}`
+        }}
+      >
+        {statsItems.map((item) => (
+          <Box
+            key={item.label}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 90
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{ color: theme.palette.text.secondary, letterSpacing: 0.2 }}
+            >
+              {item.label}
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {item.value}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+
       {/* Overlay (ring + icon chips) */}
       {pathname === '/' && (
         <StatusOverlay show={!isDongleConnected || !isStreaming} mode={mode} offsetY={overlayY} />
@@ -932,7 +1246,7 @@ const CarplayComponent: React.FC<CarplayProps> = ({
       <div
         id="videoContainer"
         ref={videoContainerRef}
-        {...touchHandlers}
+        {...mergedTouchHandlers}
         style={{
           height: '100%',
           width: '100%',
@@ -940,12 +1254,14 @@ const CarplayComponent: React.FC<CarplayProps> = ({
           margin: 0,
           display: 'flex',
           touchAction: 'none',
+          userSelect: 'none',
           backgroundColor: receivingVideo ? 'transparent' : theme.palette.background.default,
           visibility: receivingVideo ? 'visible' : 'hidden',
           zIndex: receivingVideo ? 1 : -1,
           position: 'relative'
         }}
       >
+        <InfoBar show={showInfoBar} mounted={infoBarMounted} />
         <canvas
           ref={canvasRef}
           id="video"
