@@ -122,5 +122,11 @@
     "abort": "Abbrechen",
     "installNow": "Jetzt installieren",
     "close": "Schließen"
+  },
+  "statusBar": {
+    "temperature": "Temperatur",
+    "voltage": "Spannung",
+    "cpu": "CPU",
+    "fan": "Lüfter"
   }
 }

@@ -122,5 +122,11 @@
     "abort": "Скасувати",
     "installNow": "Встановити зараз",
     "close": "Закрити"
+  },
+  "statusBar": {
+    "temperature": "temperature",
+    "voltage": "voltage",
+    "cpu": "CPU",
+    "fan": "fan"
   }
 }

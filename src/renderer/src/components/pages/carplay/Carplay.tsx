@@ -195,11 +195,12 @@ function StatusOverlay({
 
 function InfoBar({ show, mounted }: { show: boolean; mounted: boolean }) {
   const theme = useTheme()
+  const { t } = useTranslation()
   const items = [
-    { label: 'Temperatur', value: '22°C' },
-    { label: 'Spannung', value: '12.8V' },
-    { label: 'CPU', value: '45%' },
-    { label: 'Lüfter', value: '1200 RPM' }
+    { label: t('statusBar.temperature'), value: '22°C' },
+    { label: t('statusBar.voltage'), value: '12.8V' },
+    { label: t('statusBar.cpu'), value: '45%' },
+    { label: t('statusBar.fan'), value: '1200 RPM' }
   ]
 
   return (
