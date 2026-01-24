@@ -1,12 +1,14 @@
 import { SettingsNode } from '../types'
 import { ExtraConfig } from '@main/Globals'
 import { Camera } from '../../components/pages/settings/pages/camera'
+import CameraswitchIcon from '@mui/icons-material/Cameraswitch'
 
 export const videoSchema: SettingsNode<ExtraConfig> = {
   type: 'route',
   route: 'video',
   label: 'Video',
   labelKey: 'settings.video',
+  labelIcon: CameraswitchIcon,
   path: '',
   children: [
     {

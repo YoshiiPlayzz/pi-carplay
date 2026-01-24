@@ -117,11 +117,15 @@ export function KeyBindingRow({ node }: { node: KeyBindingNode }) {
   }, [applyValue, capturing, hasDefault, reset])
 
   const label = node.labelKey ? t(node.labelKey) : node.label
+  const LabelIcon = node.labelIcon
 
   return (
     <>
       <StackItem node={node} onClick={() => setCapturing(true)}>
-        <p>{label}</p>
+        <Typography sx={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          {LabelIcon ? <LabelIcon style={{ fontSize: '1.1em' }} /> : null}
+          {label}
+        </Typography>
 
         {/* Right side: value + reset */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, whiteSpace: 'nowrap' }}>

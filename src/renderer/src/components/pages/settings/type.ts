@@ -5,6 +5,7 @@ import { ExtraConfig } from '../../../../../main/Globals'
 export interface StackItemProps {
   children?: ReactNode
   withForwardIcon?: boolean
+  labelIcon?: ReactNode
   value?: string
   showValue?: boolean
   onClick?: () => void

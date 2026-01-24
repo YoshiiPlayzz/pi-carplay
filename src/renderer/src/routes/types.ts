@@ -19,9 +19,11 @@ export type NodeMeta = {
   page?: {
     title?: string
     labelTitle?: string
+    labelIcon?: React.ElementType
     description?: string
     labelDescription?: string
   }
+  labelIcon?: React.ElementType
   displayValue?: boolean
   displayValueUnit?: string
   valueTransform?: ValueTransform<any, any>
@@ -31,6 +33,7 @@ export type NodeMeta = {
 export type BaseFieldNode = NodeMeta & {
   label: string // TODO deleted in favor of i18n
   labelKey?: string
+  labelIcon?: React.ElementType
   path: string
 }
 

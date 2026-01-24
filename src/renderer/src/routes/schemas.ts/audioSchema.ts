@@ -1,5 +1,6 @@
 import { SettingsNode, ValueTransform } from '../types'
 import { ExtraConfig } from '../../../../main/Globals'
+import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 
 const audioValueTransform: ValueTransform<number | undefined, number> = {
   toView: (v) => Math.round((v ?? 1) * 100),
@@ -16,6 +17,7 @@ export const audioSchema: SettingsNode<ExtraConfig> = {
   route: 'audio',
   label: 'Audio',
   labelKey: 'settings.audio',
+  labelIcon: VolumeUpIcon,
   path: '',
   children: [
     {

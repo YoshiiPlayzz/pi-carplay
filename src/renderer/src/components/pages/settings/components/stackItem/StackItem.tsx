@@ -101,6 +101,7 @@ export const StackItem = ({
   node,
   showValue,
   withForwardIcon,
+  labelIcon,
   onClick
 }: StackItemProps) => {
   const { t } = useTranslation()
@@ -137,6 +138,7 @@ export const StackItem = ({
       tabIndex={onClick ? 0 : -1}
       role={onClick ? 'button' : undefined}
     >
+      {labelIcon}
       {children}
       {showValue && (value || displayValue) && (
         <div style={{ whiteSpace: 'nowrap', fontSize: 'clamp(0.85rem, 2.0svh, 0.95rem)' }}>

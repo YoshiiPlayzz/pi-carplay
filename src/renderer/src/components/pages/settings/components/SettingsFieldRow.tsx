@@ -18,6 +18,7 @@ type Props<T, K> = {
 export const SettingsFieldRow = <T, K>({ node, value, state, onChange, onClick }: Props<T, K>) => {
   const { t } = useTranslation()
   const label = node.labelKey ? t(node.labelKey) : node.label
+  const LabelIcon = node.labelIcon
 
   if (onClick) {
     return (
@@ -28,13 +29,16 @@ export const SettingsFieldRow = <T, K>({ node, value, state, onChange, onClick }
         value={getValueByPath(state, node.path)}
         showValue={node.displayValue}
       >
-        <Typography>{label}</Typography>
+        <Typography sx={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          {LabelIcon ? <LabelIcon style={{ fontSize: '1.1em' }} /> : null}
+          {label}
+        </Typography>
       </StackItem>
     )
   }
 
   return (
-    <SettingsItemRow label={label}>
+    <SettingsItemRow label={label} labelIcon={LabelIcon}>
       <SettingsFieldControl node={node} value={value} onChange={onChange} />
     </SettingsItemRow>
   )

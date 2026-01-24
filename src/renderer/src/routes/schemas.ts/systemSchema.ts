@@ -5,11 +5,13 @@ import { Restart } from '../../components/pages/settings/pages/system/Restart'
 import { PowerOff } from '../../components/pages/settings/pages/system/PowerOff'
 import type { SettingsNode } from '../types'
 import type { ExtraConfig } from '@main/Globals'
+import SystemUpdateAltIcon from '@mui/icons-material/SystemUpdateAlt'
 
 export const systemSchema: SettingsNode<ExtraConfig> = {
   route: 'system',
   label: 'System',
   labelKey: 'settings.system',
+  labelIcon: SystemUpdateAltIcon,
   type: 'route',
   path: '',
   children: [
