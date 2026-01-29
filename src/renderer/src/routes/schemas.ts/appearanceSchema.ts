@@ -1,12 +1,14 @@
 import { SettingsNode } from '../types'
 import { ExtraConfig } from '../../../../main/Globals'
 import { IconUploader } from '../../components/pages/settings/pages/system/iconUploader/IconUploader'
+import PaletteIcon from '@mui/icons-material/Palette'
 
 export const appearanceSchema: SettingsNode<ExtraConfig> = {
   type: 'route',
   route: 'appearance',
   label: 'Appearance',
   labelKey: 'settings.appearance',
+  labelIcon: PaletteIcon,
   path: '',
   children: [
     {

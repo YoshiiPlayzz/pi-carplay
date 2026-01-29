@@ -9,12 +9,14 @@ import {
   MIN_FPS,
   MAX_FPS
 } from '../../components/pages/settings/constants'
+import CameraswitchIcon from '@mui/icons-material/Cameraswitch'
 
 export const videoSchema: SettingsNode<ExtraConfig> = {
   type: 'route',
   route: 'video',
   label: 'Video',
   labelKey: 'settings.video',
+  labelIcon: CameraswitchIcon,
   path: '',
   children: [
     {

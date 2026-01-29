@@ -61,6 +61,7 @@ export function SettingsPage() {
         const _path = child.path as string
 
         if (child.type === 'route') {
+          const LabelIcon = child.labelIcon
           return (
             <StackItem
               key={index}
@@ -68,7 +69,10 @@ export function SettingsPage() {
               node={child}
               onClick={() => navigate(child.route)}
             >
-              <Typography>{child.labelKey ? t(child.labelKey) : child.label}</Typography>
+              <Typography sx={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                {LabelIcon ? <LabelIcon style={{ fontSize: '1.1em' }} /> : null}
+                {child.labelKey ? t(child.labelKey) : child.label}
+              </Typography>
             </StackItem>
           )
         }

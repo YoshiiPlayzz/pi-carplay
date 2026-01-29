@@ -5,6 +5,7 @@ import {
   MEDIA_DELAY_MAX,
   MEDIA_DELAY_STEP
 } from '../../components/pages/settings/constants'
+import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 
 const audioValueTransform: ValueTransform<number | undefined, number> = {
   toView: (v) => Math.round((v ?? 1) * 100),
@@ -21,6 +22,7 @@ export const audioSchema: SettingsNode<ExtraConfig> = {
   route: 'audio',
   label: 'Audio',
   labelKey: 'settings.audio',
+  labelIcon: VolumeUpIcon,
   path: '',
   children: [
     {

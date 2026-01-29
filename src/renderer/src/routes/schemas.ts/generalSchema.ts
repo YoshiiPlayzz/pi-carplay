@@ -1,24 +1,41 @@
 import { SettingsNode } from '../types'
 import { ExtraConfig } from '../../../../main/Globals'
 
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import PermDataSettingIcon from '@mui/icons-material/PermDataSetting'
+import KeyboardIcon from '@mui/icons-material/Keyboard'
+import EqualizerIcon from '@mui/icons-material/Equalizer'
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar'
+import LanguageIcon from '@mui/icons-material/Language'
+import FullscreenIcon from '@mui/icons-material/Fullscreen'
+import LabelIcon from '@mui/icons-material/Label'
+import WifiIcon from '@mui/icons-material/Wifi'
+import SpaceBarIcon from '@mui/icons-material/SpaceBar'
+import AutoModeIcon from '@mui/icons-material/AutoMode'
+import CellWifiIcon from '@mui/icons-material/CellWifi'
+
 export const generalSchema: SettingsNode<ExtraConfig> = {
   route: 'general',
   label: 'General',
   labelKey: 'settings.general',
   type: 'route',
   path: '',
+  labelIcon: InfoOutlinedIcon,
   children: [
     {
       type: 'route',
       route: 'connections',
       label: 'Connections',
       labelKey: 'settings.connections',
+      labelIcon: PermDataSettingIcon,
+
       path: '',
       children: [
         {
           type: 'string',
           label: 'Car Name',
           labelKey: 'settings.carName',
+          labelIcon: LabelIcon,
           path: 'carName',
           displayValue: true,
           page: {
@@ -32,6 +49,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
           type: 'string',
           label: 'UI Name',
           labelKey: 'settings.uiName',
+          labelIcon: SpaceBarIcon,
           path: 'oemName',
           displayValue: true,
           page: {
@@ -46,6 +64,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
           route: 'wifi',
           label: 'Wi-Fi',
           labelKey: 'settings.wifi',
+          labelIcon: WifiIcon,
           path: '',
           children: [
             {
@@ -67,6 +86,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
               page: {
                 title: 'Wi-Fi Frequency',
                 labelTitle: 'settings.wifiFrequency',
+                labelIcon: CellWifiIcon,
                 description: 'Wi-Fi frequency selection',
                 labelDescription: 'settings.wifiFrequencyDescription'
               }
@@ -77,6 +97,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
           type: 'checkbox',
           label: 'Auto Connect',
           labelKey: 'settings.autoConnect',
+          labelIcon: AutoModeIcon,
           path: 'autoConn'
         }
       ]
@@ -85,8 +106,10 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
       type: 'route',
       label: 'Key Bindings',
       labelKey: 'settings.keyBindings',
+      labelIcon: KeyboardIcon,
       route: 'keyBindings',
       path: '',
+
       children: [
         {
           type: 'keybinding',
@@ -210,6 +233,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
       type: 'number',
       label: 'FFT Delay',
       labelKey: 'settings.fftDelay',
+      labelIcon: EqualizerIcon,
       path: 'visualAudioDelayMs',
       displayValue: true,
       valueTransform: {
@@ -228,6 +252,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
       type: 'select',
       label: 'Steering wheel position',
       labelKey: 'settings.steeringWheelPosition',
+      labelIcon: DirectionsCarIcon,
       path: 'hand',
       displayValue: true,
       options: [
@@ -245,6 +270,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
       type: 'select',
       label: 'Language',
       labelKey: 'settings.language',
+      labelIcon: LanguageIcon,
       path: 'language',
       displayValue: true,
       options: [
@@ -263,6 +289,7 @@ export const generalSchema: SettingsNode<ExtraConfig> = {
       type: 'checkbox',
       label: 'Fullscreen',
       labelKey: 'settings.fullscreen',
+      labelIcon: FullscreenIcon,
       path: 'kiosk'
     }
   ]
